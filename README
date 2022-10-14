@@ -1,0 +1,118 @@
+/******************************************************************************
+ *
+ *     README
+ *
+ *     Assignment: HW 3 - Locality
+ *     Authors:    Daniel Peng (dpeng01), Ranvir Malik (rmalik04)
+ *     Date:       10/13/2022
+ *
+ *     This project is based off of JPEGTrans, which allows users to transform
+ *     images. A blocked array is also implemented, where elements within a
+ *     single block are stored contiguously in memory. We have analyzed the
+ *     performances of different mapping functions and their speed for
+ *     these image rotations. Our results are documented below.
+ *
+ *****************************************************************************/
+
+
+Help recieved:
+- TAs: Trevor → efficiency and cache hit rate for row-major vs block major
+- Classmates: N/A
+- Class notes
+- Interfaces of CPU_Timer and pnm.h
+
+Implementation: As per our testing, we implemented every 
+assigned transformation, including the extra credit transformation. 
+Every transformation runs correctly and without any Valgrind errors. 
+The transformations return the original image, transformed into 
+whatever the user wanted. 
+
+Architecture: The main program is ppmtrans.c, which is the command
+loop that takes in user inputs and carries out the image rotation. It can
+take an image through an image file or through standard input. 
+ppmtrans.c relies on the method suite A2Methods, which contains the 
+functions for ppmtrans to carry out the transformation of images using 
+either a normal UArray2 or a blocked UArray2 (UArray2b). A block is 
+represented by a single UArray with a length of blocksize * blocksize. 
+We defined and implemented the functions for the a2plain.c, which 
+are the functions pointed to by A2Methods that utilizes the normal 
+UArray2. A2plain.c uses the functions of the UArray2 class and 
+creates a struct of functions that A2Methods can then access.
+To transform the images, the methods suite mainly called 
+upon the mapping function of each version of UArray2 to write the 
+transformed image to a new array and then output it.
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *             TIMINGS FOR WIND CAVE JPG                   *
+ *                                                         *
+ *    ROW-MAJOR ROTATIONS | SCALE = 1  | Pixels = 373728   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *    Degrees    *    Total time (ns)  * Time per pixel(ns)*
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *       0                1026                  ~0         *
+ *      90              18700596                50         *
+ *     180              17476226                47         *
+ *     270              19171690                51         *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                         *
+ *    COL-MAJOR ROTATIONS | SCALE = 1  | Pixels = 373728   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *    Degrees    *    Total time (ns)  * Time per pixel(ns)*
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *       0                862                   ~0         *
+ *      90              17099024                46         *
+ *     180              22767553                61         *
+ *     270              16627662                44         *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                         *
+ *  BLOCK-MAJOR ROTATIONS | SCALE = 1  | Pixels = 373728   *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *    Degrees    *    Total time (ns)  * Time per pixel(ns)*
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *       0                786                   ~0         *
+ *      90              24564490                66         *
+ *     180              28084215                75         *
+ *     270              25218600                67         *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                 GENERAL CONCLUSION                      *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *     Overall, we found that block major mapping was      *
+ *  the slowest for all the rotations, other than the 0    *
+ *  degree rotation. On average, the block major mapping   *
+ *  required around 69 nanoseconds per pixel when rotating *
+ *  the cave image. For column-major mapping, this average *
+ *  was 50.3 nanoseconds. Finally, for row-major mapping,  *
+ *  this average was 49.3 nanoseconds. From this experiment*
+ *  we can clearly see that row and column major mapping   *
+ *  for the rotations are much faster than block major.    *
+ *                                                         *
+ *  There are a few reasons for this case: it is possible  *
+ *  that block major mapping has better locality when it   *
+ *  comes to reading from blocks. However, writing to a    *
+ *  new block will usually always be a cache miss due to   *
+ *  the fact that these blocks themselves are not close to *
+ *  each other in memory. On the other hand, rotations for *
+ *  row major mapping and column major mapping will have   *
+ *  better locality depending on the rotation. If this     *
+ *  computer stores array elements in row major order,     *
+ *  then there will be a lot of cache hits when rotating   *
+ *  180 degrees (row to row), and more misses for 90 and   *
+ *  270 degrees (row to col). The same logic can be used   *
+ *  for column major mapping, which would explain why the  *
+ *  180 degree rotation for column major was the slowest. *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *              NAME AND MODEL OF COMPUTER                 *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *             CPU: Intel(R) Core(TM) i7-8750H             *
+ *             CLOCK SPEED: CPU @ 2.20GHz 2.21             *
+ *             NAME + MODEL: DELL XPS 15                   *
+ *                                                         *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+Time spent: In total, we spent about 30 hours on this assignment.
+
+
